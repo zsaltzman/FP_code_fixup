@@ -22,11 +22,11 @@ FP_INDIVIDUAL_DAY_DATA_FILENAME = [ FP_MEAN_SEM_DIRECTORY '\individual_day_graph
 save(getPipelineVarsFilename); 
 
 % Uses subtractReferenceAndSave and calculateDF_F0
-% Basic_FP_processing
+Basic_FP_processing
 
-% Hannah_Rufina_FP_v1_uncorrected 
+Hannah_Rufina_FP_v1_uncorrected 
 
-% rick_mean_SEM_calc_indiv_plots_v3
+rick_mean_SEM_calc_indiv_plots_v3
 
 rick_HanRuf_actions_heatmaps_all_phases_v4_1_pub
 
