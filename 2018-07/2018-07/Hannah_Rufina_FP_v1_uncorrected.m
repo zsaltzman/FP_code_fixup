@@ -1,14 +1,16 @@
 %% Hannah_Rufina_FP_v1
 
 % built from partially completed Rufina_2019_06_FP_v4
+clear;
+load(getPipelineVarsFilename);
 
 %Real folders/files
 folder = FP_PROC_DIRECTORY;
-outputfolder = FP_HANNAH_DIRECTORY;
+outputfolder = FP_COMPILE_DIRECTORY;
 medpcfile = FP_MEDPC_FILE;
 outputfile = '2018-07 App MATLAB Output';
 
-timestampfolder = FP_TIMESTAMP_FILE;
+timestampfilename = FP_TIMESTAMP_FILE;
 codename = 'Hannah_Rufina_FP_v1';
 
 
@@ -82,9 +84,7 @@ for file = 1:size(data,1)
     %transfer zscored data cell (w/o latency) to tempdata as matrix
     temptimedata = cell2mat(data{file,2}(:,1:3));
     
-    %find the start pulse (first 0 in DIO) from pre-resampled data and
-    % TODO: Ask Rick tomorrow about what to do if there is no start pulse
-    % (temptimedata(:,3) contains no zeroes)
+    %find the start pulse (first 0 in DIO) from pre-resampled data
     starttimeindex = find(temptimedata(:,3)<1,1,'first');
     starttime = temptimedata(starttimeindex,1);
     
@@ -116,8 +116,8 @@ end
 %only imported Cued and CuedTO
 
 %cut off column headings and sort by animal ID, ascending order
-%important!: make sure medpc2excel imported by ascending date
-%order, can figure out a way to do this in MATLAB if needed
+%important! make sure medpc2excel imported by ascending date
+%order
 medheadsum = medrawpresort(1,1:16);
 medheader = medrawpresort(1,:);
 medrawpresort = medrawpresort(2:end,:);
@@ -134,8 +134,6 @@ medraw = medrawpresort(sortidx,:);
 clear medrawpresort;
 
 %cycle through each mouse
-
-
 for row = 1:size(medraw,1)
     
     meddata = cell(1,8);
@@ -159,11 +157,9 @@ for row = 1:size(medraw,1)
         
         %Create output variable
         meddata{1,variable}= reshape([raw1{:}],size(raw1));
-        
-        
+               
         medsum=medraw(row,1:16);
-        
-        
+             
         %% Clear temporary variables
         clearvars raw1 R ;
         
@@ -420,29 +416,20 @@ clear tempdata
 %create a variable to let me know how many actions were cut off due to
 %different restrictions such as not enough time, etc
 
-%     %Used to determine how many extra cells to grab forward and back. Going with just number of cells for ease right now, should be consistent so long as there isn't a timestamp issue
-%     %minus 5 sec = 610
-%     [~,minus5ind] = min(abs(data{file,5}(1:actionind(action),1)-(data{file,5}(actionind(action),1)-5)));
-%     %plus 10 sec = 1221
-%     [~,plus10ind] = min(abs(data{file,5}(actionind(action):end,1)-(data{file,5}(actionind(action),1)+10)));
-
-
-
-%grab data{file,5}(actionind(action)-610:actionind(action)+1221,2)
-
-
 %initialize rawtogether
 rawtogether = cell(size(data,1),2);
 
 for file = 1:size(data,1)
     
     %this file was cut short
-    if strcmp(filenames{file},'PROCESSED_819_Cued_Day_8_6.csv')
-        cutoff = 1745;
+    if strcmp(filenames{file},'PROCESSED_HB06_Timeout_Day_13_3.csv')
+        cutoff = 1110;
     else
         cutoff = 1789.5;
     end
     
+    % twenty seconds before the end of the file
+    % cutoff = data{file, 5}(length(data{file, 5}(:, 1)), 1) - 10.5;
     
     
     %preallocate arrays and counters
@@ -663,7 +650,7 @@ file = 1;
 timestampfile = data{file,5}(timeind-610:timeind+1221,1)-data{file,5}(timeind,1);
 
 
-xlswrite([timestampfolder 'timestamp.xlsx'],timestampfile)
+xlswrite(timestampfilename,timestampfile)
 
 
 

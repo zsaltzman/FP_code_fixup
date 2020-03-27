@@ -10,16 +10,10 @@
     %v3 - improve graphs
     %v2 - skip days when the fiber came off the head during the session
 
+clear;
+load(getPipelineVarsFilename);
+
 %reading in MATLAB_... files in 2019-06 App MATLAB folder
-
-
-clear
-close all;
-
-exp = '2019-06';
-% exp = '2018-07';
-
-
 codename = 'rick_mean_SEM..._v3';
 
 %Groups
@@ -29,31 +23,14 @@ BLA_GACh = [813 814 820 827];
 BLA_GCaMP = [3 4 5 6];
 
 
-%% Set folder/files
-if strcmp(exp,'2019-06')
-    
-    folder = 'C:\Users\User\Google Drive\2019-06 NBM-BLA + GACh FP\Doric\Processed\2019-06 App MATLAB' ;
-    outputfolder = 'C:\Users\User\Google Drive\2019-06 NBM-BLA + GACh FP\Doric\Processed\2019-06 App MATLAB\Individual Day Graphs';
-    outputfile = '2019-06 App MATLAB graph data';
-    timestampfile = 'C:\Users\User\Google Drive\2019-06 NBM-BLA + GACh FP\timestamp.xlsx';
-    
-    
-    %file to skip
-    skips = ["827_Timeout_Day_06"; "813_Timeout_Day_12"; "820_Timeout_Day_06"; "814_Timeout_Day_01"; "814_Timeout_Day_07"];
-    
-    
-elseif strcmp(exp,'2018-07')
-    
-    folder = 'C:\Users\User\Google Drive\2018-07 BLA Fiber Pho\Doric\Processed\2018-07 App MATLAB' ;
-    outputfolder = 'C:\Users\User\Google Drive\2018-07 BLA Fiber Pho\Doric\Processed\2018-07 App MATLAB\Individual Day Graphs';
-    outputfile = '2018-07 App MATLAB graph data';
-    timestampfile = 'C:\Users\User\Google Drive\2018-07 BLA Fiber Pho\timestamp.xlsx';
-    
-    %file to skip
-    skips = ["HB03_Timeout_Day_12"; "HB04_Timeout_Day_11"; "HB04_Timeout_Day_13"; "HB05_Timeout_Day_09"; "HB06_Timeout_Day_09";  "HB06_Timeout_Day_11"; "HB08_Timeout_Day_12"];
-    
-    
-end
+%% Set folder/files   
+folder = FP_COMPILE_DIRECTORY;
+outputfolder = FP_MEAN_SEM_DIRECTORY;
+timestampfile = FP_TIMESTAMP_FILE;
+outputfile = '2018-07 App MATLAB graph data';
+
+%file to skip
+skips = ["HB03_Timeout_Day_12"; "HB04_Timeout_Day_11"; "HB04_Timeout_Day_13"; "HB05_Timeout_Day_09"; "HB06_Timeout_Day_09";  "HB06_Timeout_Day_11"; "HB08_Timeout_Day_12"];
 
 % Make some pretty colors for later plotting
 % http://math.loyola.edu/~loberbro/matlab/html/colorsInMatlab.html
@@ -127,11 +104,7 @@ for file = 1:size(graphdata,1)
        end
     end
 end
-  
-%old direct save
-%save('C:\Users\User\Google Drive\2019-06 NBM-BLA + GACh FP\Doric\Processed\2019-06 App MATLAB\Graphs\rick_2019_06_plotting_vars.mat', 'graphdata', 'graphmean', 'graphsem', 'datanames')
-
-save([outputfolder '\' outputfile ' ' date '_' codename '.mat'], '-v7.3');
+save(FP_INDIVIDUAL_DAY_DATA_FILENAME, '-v7.3');
 
 
 %% Make a Peri-Event Stimulus Plot and Heat Map
@@ -142,7 +115,7 @@ graphtime = time';
 
 for file = 1:size(graphdata,1)
     
-    %skip shitters
+    %skip bad files
     if any(strcmp(datanames{file}{1}(8:end-5),skips))
                 
         continue
@@ -156,33 +129,13 @@ for file = 1:size(graphdata,1)
     else
         %determine the day of mice
         mouse_day = datanames{file,1}{1}(8:end-5);
-    
-        
-        if strcmp(exp,'2019-06')
-            mouse_ID = datanames{file,1}{1}(8:10);
-            
-            %What indicator is it?
-            if any(str2double(mouse_day(1:3)) == NBM_BLA)
-                indicator = 'NBM-BLA';
-                ylimits = [-2 4.5];
-                
-            elseif any(str2double(mouse_day(1:3)) == BLA_GACh)
-                indicator = 'BLA GACh';
-                ylimits = [-3 7];
-            end
-            
-            
-        elseif strcmp(exp,'2018-07')
-            mouse_ID = datanames{file,1}{1}(11);
-            indicator = 'BLA GCaMP6s';
-            ylimits = [-1.5 4];
-        end
+        mouse_ID = datanames{file,1}{1}(11);
+        indicator = 'BLA GCaMP6s';
+        ylimits = [-1.5 4];
         
         for action = 1:size(graphdata,2)
             if ~isempty(graphdata{file,action})
-
-
-
+                
                 mean_allSignals = graphmean{file,action}';
                 std_allSignals = graphsem{file,action}';
                 allSignals = graphdata{file,action}';
@@ -201,9 +154,6 @@ for file = 1:size(graphdata,1)
 
                 % Set specs for min and max value of event line.
                 % Min and max of either std or one of the signal snip traces
-%                 linemin = min(min(min(allSignals)),min(yy));
-%                 linemax = max(max(max(allSignals)),max(yy));
-
                 linemin = ylimits(1);
                 linemax = ylimits(2);
 
@@ -260,20 +210,9 @@ for file = 1:size(graphdata,1)
                 %Print png version of graph (save)
                 print([outputfolder '\' mouse_day '_' variables{action}], '-dpng');
 
-%                 %big version
-%                 set(gcf, 'Position', get(0, 'Screensize'));
-%                 print([outputfolder '\big\' mouse_day '_' variables{action}], '-dpng');
-                
-                %close figure
                 close all
-
-
             end
-        
         end
-        
     end
-    
-    
 end
 

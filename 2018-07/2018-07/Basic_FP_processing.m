@@ -5,7 +5,8 @@
 %main goal here is to batch calculate corrected df/f0's while keeping
 %the DIO signal to use for FP analysis of cued app task (2019-06 at
 %this point)
-
+clear;
+load(getPipelineVarsFilename);
 
 %% Change this directory to the folder containing your raw doric files!
 directory = FP_RAW_DIRECTORY;
@@ -13,6 +14,7 @@ output_directory = FP_PROC_DIRECTORY;
 files = dir(directory);
 processed_files = dir(output_directory);
 processed_files = [ processed_files(:).name ];
+
 % The next function is not necessarily needed but it is just a way to
 % avoid processing files already processed. Keep in mind that to be
 % relevant, these functions  will work on data already selected (i.e which time range) which could be
@@ -21,24 +23,47 @@ processed_files = [ processed_files(:).name ];
 for file = files'
   
   filename = strcat(file.name);
-  splitfilename = split(filename, '.');
-  splitfilename = splitfilename(1);
-  
   %only process .csv files, don't process "PROCESSED" files, and don't
   %process any that already have a 'PROCESSED' version in the folder
-  if isempty(strfind(filename, '.csv')) || ~isempty(strfind(splitfilename, processed_files)) || sum(strcmp(strcat('PROCESSED_',filename),{files.name}))>0
-      fprintf('Detected %s as already processed, continuing...\n', filename);
-      continue;
+  if isempty(strfind(filename, '.csv'))==true || isempty(strfind(filename, 'PROCESSED_'))==false || sum(strcmp(strcat('PROCESSED_',filename),{files.name}))>0 || ~isempty(strfind(processed_files, filename))
+      fprintf('Skipping %s\n', filename);
+      continue
   end
-  fprintf('Processing %s\n', filename);
+  
  
   %[~,~,allData{1}] = csvread([directory,'\' filename]);  
-  allData = csvread([directory,'\' filename],2,0); % 1: skip first two lines line (header); might need to skip more depeding how the file but basically the goal is to scrap the headers.
+  allData = readmatrix([directory,'\' filename]); % reading in just numeric lines, therefore skipping the headers
+  colheader = readcell([directory,'\' filename],'Range', 'A1:Z1'); %read just the first row to get the headers
   firstLine = find(allData(:,1) > 0.1, 1); % Everything before ~100 ms is noise from the lock-in filter calculation; it sounds like this is default in the correction we get wqhen we extract DF/F0
-  data = allData(firstLine:end, :); 
+  
+  
+  %identify cols of interest based on header
+  for cols = 1:size(colheader,2)
+      if strcmp(colheader{cols}, 'Time(s)')  
+          timecol = cols;
+           
+      elseif strcmp(colheader{cols}, 'DI/O-1')  
+          diocol = cols;
+         
+      elseif strcmp(colheader{cols}, 'AIn-1 - Demodulated(Lock-In)')  
+          ch1col = cols;
+          
+      elseif strcmp(colheader{cols}, 'AIn-2 - Demodulated(Lock-In)')  
+          ch2col = cols;
+          
+      end
+  end
+  
+  %rearrange data array based on id'd cols
+  data = allData(firstLine:end, [timecol ch1col ch2col diocol]); 
+  
   
   DF_F0 = calculateDF_F0(data);
-  DIO = data(:,5);
-
+  
+  %find DIO column
+  DIO = data(:,4);
+  
+  
   correctedSignal = subtractReferenceAndSave(DF_F0, output_directory, filename, DIO);
+  fprintf('Processed file %s\n', filename);
 end

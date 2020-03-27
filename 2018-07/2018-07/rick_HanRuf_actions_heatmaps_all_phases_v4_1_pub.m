@@ -20,47 +20,19 @@
 
 %Copy of heatmaps_sep_by_phase_Ribicoff
 %mod'd to put all phases together
-
-
-%% clear
-clear
-
-exp = '2018-07';
-% exp = '2019-06';
+clear;
+load(getPipelineVarsFilename);
 
 codename = 'rick_actions_heatmaps_all_phases_v4_1_pub';
 %% Set folder/files
+load(FP_INDIVIDUAL_DAY_DATA_FILENAME)
 
+outputfolder = FP_SUMMARY_DIRECTORY;
+timestampfile = FP_TIMESTAMP_FILE;
 
-if strcmp(exp,'2019-06')
-    
-    folder = 'C:\Users\User\Google Drive\2019-06 NBM-BLA + GACh FP\Doric\Processed\2019-06 App MATLAB\Individual Day Graphs' ;
-    
-    load([folder '\2019-06 App MATLAB graph data 25-Dec-2019_rick_mean_SEM..._v3.mat'])
-    
-    
-    outputfolder = 'C:\Users\User\Google Drive\2019-06 NBM-BLA + GACh FP\Doric\Processed\2019-06 App MATLAB\Summary Graphs by action';
-    outputfile = 'MATLAB means+sem for prism';
-    timestampfile = 'C:\Users\User\Google Drive\2019-06 NBM-BLA + GACh FP\timestamp.xlsx';
-    
-    skips = ["827_Timeout_Day_06"; "820_Timeout_Day_06";"814_Timeout_Day_01"; "814_Timeout_Day_07"; "813_Timeout_Day_12"];
-    
-    
-elseif strcmp(exp,'2018-07')
-    
-    folder = 'C:\Users\User\Google Drive\2018-07 BLA Fiber Pho\Doric\Processed\2018-07 App MATLAB\Individual Day Graphs' ;
-    
-    load([folder '\2018-07 App MATLAB graph data 23-Dec-2019_rick_mean_SEM..._v3.mat'])
-    
-    outputfolder = 'C:\Users\User\Google Drive\2018-07 BLA Fiber Pho\Doric\Processed\2018-07 App MATLAB\Summary Graphs';
-    outputfile = '2018-07 MATLAB means+sem for prism';
-    timestampfile = 'C:\Users\User\Google Drive\2018-07 BLA Fiber Pho\timestamp.xlsx';
-    
-    skips = ["HB03_Timeout_Day_12"; "HB04_Timeout_Day_11"; "HB04_Timeout_Day_13"; "HB05_Timeout_Day_09"; "HB06_Timeout_Day_09";  "HB06_Timeout_Day_11"; "HB08_Timeout_Day_12"];
-    
-end
+outputfile = '2018-07 MATLAB means+sem for prism';
 
-
+skips = ["HB03_Timeout_Day_12"; "HB04_Timeout_Day_11"; "HB04_Timeout_Day_13"; "HB05_Timeout_Day_09"; "HB06_Timeout_Day_09";  "HB06_Timeout_Day_11"; "HB08_Timeout_Day_12"];
 
 
 %Groups
@@ -85,62 +57,27 @@ graphtime = time;
 %initialize
 data_mouse_ID = zeros(size(datanames,1),1);
 
-
-if strcmp(exp,'2019-06')
-    
-    %prep for cut down data to just one mouse
-    
-    for ii = 1:size(datanames,1)
-        data_mouse_ID(ii) = str2double(datanames{ii}{1}(8:10));
-    end
-    
-    all_mouse_ID= unique(data_mouse_ID);
-    
-    
-    
-    %for drawing white line
-    rew_threshold = ["813_Timeout_Day_20"; "814_Timeout_Day_17"; "820_Timeout_Day_19"; "827_Timeout_Day_18"];
-    
-    %for grabbing specific days for collapsing mice
-    TO_10_rew = ["813_Timeout_Day_10"; "814_Timeout_Day_10"; "820_Timeout_Day_10"; "827_Timeout_Day_08"];
-    
-    %picked ext by picking last ext day that had at least four trials with
-    %tone-np-rec
-    %for grabbing specific days for collapsing mice
-    Ext_Day = ["813_ZExtinction_Day_03"; "814_ZExtinction_Day_04"; "820_ZExtinction_Day_01"; "827_ZExtinction_Day_02"];
-    
-    
-elseif strcmp(exp,'2018-07')
-    %prep for cut down data to just one mouse
-    
-    for ii = 1:size(datanames,1)
-        data_mouse_ID(ii) = str2double(datanames{ii}{1}(11));
-    end
-    
-    all_mouse_ID= unique(data_mouse_ID);
-    
-    
-    %for drawing white line
-    rew_threshold = ["3_Timeout_Day_08"; "4_Timeout_Day_08"; "6_Timeout_Day_13"];
-    
-    Ext_Day = ["3_ZZExt_Day_1"; "4_ZZExt_Day_1"; "6_ZZExt_Day_2"];
+%prep for cut down data to just one mouse
+for ii = 1:size(datanames,1)
+    data_mouse_ID(ii) = str2double(datanames{ii}{1}(11));
 end
 
-%set for loop num
+all_mouse_ID= unique(data_mouse_ID);
 
-if strcmp(exp,'2019-06')
-    %skip mouse 819 (NBM-BLA)
-    nummer = [1 2 4 5];
-    
-elseif strcmp(exp,'2018-07')
-    
-    nummer = [1 2 4];
-    
-end
 
+%for drawing white line
+rew_threshold = ["3_Timeout_Day_08"; "4_Timeout_Day_08"; "6_Timeout_Day_13"];
+
+Ext_Day = ["3_ZZExt_Day_1"; "4_ZZExt_Day_1"; "6_ZZExt_Day_2"];
+
+%set for loop num   
+% TODO: Took this out because it was breaking and looked logically
+% incorrect to me. Replaced it by simply getting mouse ID number from
+% all_mouse_ID
+% nummer = [1 2 4];
 
 %% cut down data to just one mouse
-for num = nummer
+for num = 1:length(all_mouse_ID)
     
     %Define mouse_ID number for the run of the for loop
     mouse_ID = all_mouse_ID(num);
@@ -149,12 +86,9 @@ for num = nummer
     if any(mouse_ID == BLA_GACh)
         indicator = 'BLA GACh';
         GAChnum=find(BLA_GACh==mouse_ID);
-        
     elseif any(mouse_ID == BLA_GCaMP)
         indicator = 'BLA GCaMP';
         BLAGCaMP_num=find(BLA_GCaMP==mouse_ID);
-        
-        
     end
     
     %Cut down raw to just current mouse
@@ -176,28 +110,7 @@ for num = nummer
     trimmednames = mousenames;
     
     
-    
-    
-    
-    
-    
     %% Make arrays for each mouse, across days
-    
-    %variables = ["correct" "tone" "incorrect" "receptacle" "randrec" "tonehit" "tonemiss" "inactive"];
-    
-    %need to check the flow of the loops,
-    
-    %initialize arrays
-    %     correct = NaN(size(trimmedmean{1,1},1), size(trimmedmean,1)*2);
-    %     tone = correct;
-    %     incorrect  = correct;
-    %     receptacle = correct;
-    %     randrec = correct;
-    %     tonehit = correct;
-    %     tonemiss = correct;
-    %     inactive = correct;
-    
-    
     clear correct tone incorrect receptacle randrec tonehit tonemiss inactive day_align_filenames
     
     %        for action = [1 3 4 6]
@@ -209,12 +122,9 @@ for num = nummer
         for file = 1:size(trimmedmean,1)
             
             
-            %skip shitters
-            if any(strcmp(trimmednames{file}{1}(8:end-5),skips))
-                
-                
+            %skip bad data
+            if any(strcmp(trimmednames{file}{1}(8:end-5),skips)) 
                 continue
-                
             else
                 
                 day_counter = day_counter+1;
@@ -259,14 +169,9 @@ for num = nummer
                         %fill in SEM
                         eval([prism_variables{action}, '(:,day_counter*2) = trimmedsem{file,action};']);
                     end
-                    
-                    
                 end
-                
             end
-            
-        end
-        
+        end 
     end
     
     %% Find start day of phases and threshold days
@@ -282,17 +187,8 @@ for num = nummer
     TO = find(~cellfun(@isempty,timeout_test),1);
     
     TO_Last_day = find(~cellfun(@isempty,timeout_test),1,'last');
-    
-    if strcmp(exp,'2019-06')
-        %Find all the days that are Ext
-        Ext_test = strfind(day_align_filenames,'ZExtinction');
-        
-    elseif strcmp(exp,'2018-07')
-        Ext_test = strfind(day_align_filenames,'ZZExt');
-        
-    end
-    
-    
+    Ext_test = strfind(day_align_filenames,'ZZExt');
+ 
     %find the first non-empty cell and set that index to TO
     Ext = find(~cellfun(@isempty,Ext_test),1);
     
@@ -359,9 +255,7 @@ for num = nummer
     
     if any(mouse_ID == BLA_GACh)
         rew_thresh_test = strfind(day_align_filenames,rew_threshold(GAChnum));
-        
         rew_thresh_day = find(~cellfun(@isempty,rew_thresh_test),1);
-        
         rew_thresh_all_mice(:,GAChnum) = day_align(:,rew_thresh_day );
         
         %% For collapsing mice
@@ -710,14 +604,6 @@ elseif any(mouse_ID == BLA_GCaMP)
     
     %Print png version of graph (save)
     print([outputfolder '\Collapsed incorrect days ' indicator], '-dpng');
-    
-    %zoom in
-    %     xlim([beforetoneticks(2) afterrecticks(1)])
-    %     print([outputfolder '\2 secs\Collapsed+ ' indicator ' Tone_NP_Rec'], '-dpng');
-    
-    
-    
-    
     
 end
 
